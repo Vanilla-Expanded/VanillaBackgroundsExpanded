@@ -38,6 +38,7 @@
   <ItemGroup>
     <Compile Include="BackgroundController.cs" />
     <Compile Include="HarmonyPatches.cs" />
+    <Compile Include="ModCompat.cs" />
     <Compile Include="VBEMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

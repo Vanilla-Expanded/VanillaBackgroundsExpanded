@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Defs>
+    <VBE.BackgroundImageDef MayRequire="kentington.saveourship2">
+        <label>SoS Splash Screen</label>
+        <description>Splash Screen Included in SoS2</description>
+        <defName>SOS_Splash</defName>
+        <path>SplashScreen</path>
+        <iconPath>UI/Ship_Icon_Maintain</iconPath>
+    </VBE.BackgroundImageDef>
+</Defs>

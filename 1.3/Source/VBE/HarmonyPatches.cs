@@ -41,7 +41,7 @@ namespace VBE
                     .Select(image => new FloatMenuOption(image.label, delegate
                     {
                         BackgroundController.Current = image;
-                        VBEMod.Settings.current = image;
+                        VBEMod.Settings.current = image.defName;
                         VBEMod.Settings.randomize = false;
                         VBEMod.Settings.cycle = false;
                         VBEMod.Settings.Write();

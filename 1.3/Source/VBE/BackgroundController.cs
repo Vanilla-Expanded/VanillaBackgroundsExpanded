@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using RimWorld;
+﻿using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -17,12 +16,12 @@ namespace VBE
 
         public static BackgroundImageDef Current
         {
-            get => current;
+            get => current ?? Default;
             set
             {
                 if (current == value) return;
-                BackgroundMain.overrideBGImage = value.Texture;
                 current = value;
+                BackgroundMain.overrideBGImage = Current.Texture;
             }
         }
 
@@ -36,7 +35,7 @@ namespace VBE
                 if (transitionPct >= 0f && transitionTo is not null && transitionTo != Current)
                 {
                     GUI.color = new Color(1f, 1f, 1f, transitionPct);
-                    GUI.DrawTexture(bgRect, transitionTo.Texture, ScaleMode.ScaleAndCrop);
+                    GUI.DrawTexture(bgRect, transitionTo.Texture, ScaleMode.ScaleToFit);
                     GUI.color = Color.white;
                 }
 
@@ -51,17 +50,15 @@ namespace VBE
                 transitionTo = GetNext();
                 transitionPct = 0f;
                 transitionTime = float.MaxValue;
-                Log.Message($"Beginning transition to {transitionTo}");
             }
 
             if (transitionPct >= 0f && transitionTo is not null)
             {
-                Log.Message($"Transition to {transitionTo}: {transitionPct.ToStringPercent()}");
                 transitionPct += Time.deltaTime;
                 if (transitionTo != Current)
                 {
                     GUI.color = new Color(1f, 1f, 1f, transitionPct);
-                    GUI.DrawTexture(bgRect, transitionTo.Texture, ScaleMode.ScaleAndCrop);
+                    GUI.DrawTexture(bgRect, transitionTo.Texture, ScaleMode.ScaleToFit);
                     GUI.color = Color.white;
                 }
 
@@ -98,16 +95,8 @@ namespace VBE
         public static void Initialize()
         {
             var settings = VBEMod.Settings;
-            if (settings.randomize)
-            {
-                settings.enabled ??= DefDatabase<BackgroundImageDef>.AllDefs.ToDictionary(def => def, _ => true);
-
-                foreach (var def in DefDatabase<BackgroundImageDef>.AllDefs)
-                    if (!settings.enabled.ContainsKey(def))
-                        settings.enabled.Add(def, true);
-
-                Current = GetNext();
-            }
+            settings.CheckInit();
+            if (settings.randomize) Current = GetNext();
 
             if (settings.cycle) transitionTime = Time.time + settings.cycleTime.RandomInRange;
 
