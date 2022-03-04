@@ -36,7 +36,8 @@ namespace VBE
                     {
                         label = arr[1].Trim(),
                         description = textDB[key]["description"],
-                        defName = defName
+                        defName = defName,
+                        isTheme = true
                     });
                 }
 

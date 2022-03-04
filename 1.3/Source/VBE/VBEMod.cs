@@ -24,6 +24,10 @@ namespace VBE
             HarmonyPatches.DoPatches(Harm);
         }
 
+        public static IEnumerable<BackgroundImageDef> AllDefsInOrder => from def in DefDatabase<BackgroundImageDef>.AllDefs
+            orderby def.isCore descending, def.isVanilla descending, def.isTheme, def.label
+            select def;
+
         public void Initialize()
         {
             foreach (var def in ModLister.AllExpansions)
@@ -34,8 +38,11 @@ namespace VBE
                     description = def.description,
                     defName = def.defName,
                     path = def.backgroundPath,
-                    iconPath = def.iconPath
+                    iconPath = def.iconPath,
+                    isCore = def.isCore,
+                    isVanilla = true
                 };
+
                 DefGenerator.AddImpliedDef(bgDef);
                 if (def.isCore) BackgroundController.Default = bgDef;
             }
@@ -78,7 +85,7 @@ namespace VBE
             lastHeight = 5f;
             Widgets.BeginScrollView(inRect, ref scrollPos, viewRect);
             var curPos = new Vector2(5f, 5f);
-            foreach (var def in DefDatabase<BackgroundImageDef>.AllDefs)
+            foreach (var def in AllDefsInOrder)
             {
                 var enabled = Settings.enabled[def.defName];
                 if (curPos.x + width > viewRect.xMax)
@@ -150,6 +157,9 @@ namespace VBE
     {
         private Texture2D icon;
         public string iconPath;
+        public bool isCore;
+        public bool isTheme;
+        public bool isVanilla;
         public string path;
         private Texture2D texture;
 

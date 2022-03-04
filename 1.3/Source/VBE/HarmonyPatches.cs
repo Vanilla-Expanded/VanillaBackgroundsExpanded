@@ -37,15 +37,16 @@ namespace VBE
         public static void DoMenuBackgroundButton(Listing_Standard listing)
         {
             if (DefDatabase<BackgroundImageDef>.AllDefsListForReading.Any() && listing.ButtonTextLabeled("SetBackgroundImage".Translate(), BackgroundController.Current.LabelCap))
-                Find.WindowStack.Add(new FloatMenu(DefDatabase<BackgroundImageDef>.AllDefs
-                    .Select(image => new FloatMenuOption(image.label, delegate
-                    {
-                        BackgroundController.Current = image;
-                        VBEMod.Settings.current = image.defName;
-                        VBEMod.Settings.randomize = false;
-                        VBEMod.Settings.cycle = false;
-                        VBEMod.Settings.Write();
-                    }, image.Icon, Color.white)).ToList()));
+                Find.WindowStack.Add(new FloatMenu((from image in VBEMod.AllDefsInOrder
+                    select
+                        new FloatMenuOption(image.label, delegate
+                        {
+                            BackgroundController.Current = image;
+                            VBEMod.Settings.current = image.defName;
+                            VBEMod.Settings.randomize = false;
+                            VBEMod.Settings.cycle = false;
+                            VBEMod.Settings.Write();
+                        }, image.Icon, Color.white)).ToList()));
         }
     }
 }
