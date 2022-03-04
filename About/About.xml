@@ -5,6 +5,7 @@
   <supportedVersions>
     <li>1.3</li>
   </supportedVersions>
+  <url>https://github.com/legodude17/VanillaBackgroundsExpanded</url>
   <packageId>vanillaexpanded.backgrounds</packageId>
   <description>
 Vanilla Backgrounds Expanded is a mod that adds many new main menu and loading screen backgrounds inspired by RimWorld - all created by Oskar Potocki for the purpose of Vanilla Expanded mod series. With mod options, you will be fully able to customize what backgrounds appear in the game, whether they cycle or not, and how long should it take for them to change into other backgrounds.
@@ -13,7 +14,18 @@ Modders can easily add new BackgroundDefs which will be automatically picked up 
 
 The background images within this mod are protected under CC BY-NC-ND 4.0. They cannot be reuploaded, modified or exploited without permission. You can, however, use them as your PC wallpaper if you want.
   </description>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+      <steamWorkshopUrl>https://steamcommunity.com/workshop/filedetails/?id=2009463077</steamWorkshopUrl>
+    </li>
+  </modDependencies>
   <loadAfter>
     <li>Ludeon.RimWorld</li>
+    <li>Ludeon.RimWorld.Royalty</li>
+	<li>Ludeon.RimWorld.Ideology</li>
+    <li>brrainz.harmony</li>
   </loadAfter>
 </ModMetaData>

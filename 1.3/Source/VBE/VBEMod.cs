@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Verse;
+using Object = UnityEngine.Object;
 
 namespace VBE
 {
@@ -12,6 +15,11 @@ namespace VBE
         public static Harmony Harm;
         public static VBESettings Settings;
         public static VBEMod Instance;
+        private bool allowAnimatedOnLoad;
+
+        private Queue<BackgroundImageDef> animatedQueue;
+
+        private bool initing;
         private float lastHeight;
         private Vector2 scrollPos;
 
@@ -20,11 +28,13 @@ namespace VBE
             Instance = this;
             Harm = new Harmony("vanillaexpanded.backgrounds");
             Settings = GetSettings<VBESettings>();
+            allowAnimatedOnLoad = Settings.allowAnimated;
             LongEventHandler.ExecuteWhenFinished(Initialize);
             HarmonyPatches.DoPatches(Harm);
         }
 
         public static IEnumerable<BackgroundImageDef> AllDefsInOrder => from def in DefDatabase<BackgroundImageDef>.AllDefs
+            where Settings.allowAnimated || !def.animated
             orderby def.isCore descending, def.isVanilla descending, def.isTheme, def.label
             select def;
 
@@ -52,6 +62,72 @@ namespace VBE
             Settings.CheckInit();
 
             BackgroundController.Initialize();
+
+            InitializeAnimated();
+        }
+
+        public void InitializeAnimated()
+        {
+            if (!Settings.allowAnimated) return;
+            if (initing)
+            {
+                foreach (var def in DefDatabase<BackgroundImageDef>.AllDefs.Except(animatedQueue).Where(def => def.NeedsInit))
+                    animatedQueue.Enqueue(def);
+                return;
+            }
+
+            animatedQueue = new Queue<BackgroundImageDef>();
+            foreach (var def in DefDatabase<BackgroundImageDef>.AllDefs.Where(def => def.NeedsInit)) animatedQueue.Enqueue(def);
+
+            initing = true;
+            InitNext();
+        }
+
+        private void InitNext()
+        {
+            if (!initing) return;
+            var videoPlayer = Utils.MakeVideoPlayer();
+            if (animatedQueue is null || animatedQueue.Count == 0)
+            {
+                initing = false;
+                if (videoPlayer.enabled) videoPlayer.enabled = false;
+                return;
+            }
+
+            var def = animatedQueue.Dequeue();
+            videoPlayer.url = def.Video;
+            videoPlayer.sendFrameReadyEvents = true;
+            videoPlayer.frame = def.previewFrame;
+            videoPlayer.frameReady += (source, idx) =>
+            {
+                AsyncGPUReadback.Request(source.texture, source.texture.mipmapCount - 1, req =>
+                {
+                    if (req.hasError) Log.Error($"[VBE] Failed to fetch image for {def.label}");
+                    else
+                        try
+                        {
+                            if (!req.done) req.WaitForCompletion();
+                            var tex = new Texture2D(req.width, req.height, TextureFormat.ARGB32, false);
+                            var data = req.GetData<uint>();
+                            tex.LoadRawTextureData(data);
+                            tex.Apply();
+                            def.InitializeAnimated(tex);
+                            videoPlayer.enabled = false;
+                            Object.Destroy(videoPlayer);
+                            InitNext();
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error($"[VBE] Exception while loading image for {def.label}: {e}");
+                        }
+                });
+            };
+            videoPlayer.prepareCompleted += source =>
+            {
+                videoPlayer.frame = def.previewFrame;
+                source.Pause();
+            };
+            videoPlayer.Prepare();
         }
 
         public override string SettingsCategory() => "VBE".Translate();
@@ -69,13 +145,23 @@ namespace VBE
             listing.Begin(leftRect);
             listing.CheckboxLabeled("VBE.Randomize".Translate(), ref Settings.randomize, "VBE.Randomize.Desc".Translate());
             listing.CheckboxLabeled("VBE.Cycle".Translate(), ref Settings.cycle, "VBE.Cycle.Desc".Translate());
+            listing.CheckboxLabeled("VBE.AllowAnimated".Translate(), ref Settings.allowAnimated, "VBE.AllowAnimated.Desc".Translate());
+            if (Settings.allowAnimated && !allowAnimatedOnLoad)
+            {
+                InitializeAnimated();
+                allowAnimatedOnLoad = true;
+            }
+
             if (Settings.cycle)
             {
                 listing.Label("VBE.CycleTime".Translate());
                 Widgets.FloatRange(listing.GetRect(28f), (int) listing.CurHeight, ref Settings.cycleTime, 0.1f, 60f);
             }
 
-            listing.Label("VBE.ToggleBackgrounds".Translate());
+            if (Settings.cycle || Settings.randomize)
+                listing.Label("VBE.ToggleBackgrounds".Translate());
+            else
+                listing.Label("VBE.SelectBackground".Translate());
 
             listing.End();
 
@@ -96,84 +182,50 @@ namespace VBE
                     height = 0f;
                 }
 
-                var myHeight = (float) def.Texture.height / def.Texture.width * width;
-                height = Mathf.Max(height, myHeight);
-                var rect = new Rect(curPos, new Vector2(width, myHeight));
-                GUI.DrawTexture(rect, def.Texture, ScaleMode.ScaleToFit);
-                if (Widgets.ButtonInvisible(rect)) enabled = !enabled;
+
+                float myHeight;
+                Rect rect;
+                if (def.Texture is null)
+                {
+                    Log.Warning($"Null texture for {def.label}");
+                    myHeight = 24f;
+                    rect = new Rect(curPos, new Vector2(width, myHeight));
+                }
+                else
+                {
+                    myHeight = (float) def.Texture.height / def.Texture.width * width;
+                    height = Mathf.Max(height, myHeight);
+                    rect = new Rect(curPos, new Vector2(width, myHeight));
+                    GUI.DrawTexture(rect, def.Texture, ScaleMode.ScaleToFit);
+                }
+
                 Widgets.DrawHighlightIfMouseover(rect);
                 TooltipHandler.TipRegion(rect, () => $"{def.LabelCap}\n\n{def.description}", def.shortHash);
-                Widgets.Checkbox(new Vector2(rect.xMax - 24f, rect.yMax - 24f), ref enabled);
+                if (Settings.cycle || Settings.randomize)
+                {
+                    if (Widgets.ButtonInvisible(rect)) enabled = !enabled;
+                    Widgets.Checkbox(new Vector2(rect.xMax - 24f, rect.yMax - 24f), ref enabled);
+                }
+                else
+                {
+                    if (Widgets.ButtonInvisible(rect)) Settings.current = def.defName;
+                    if (Settings.current == def.defName) Widgets.DrawBox(rect, 3, Texture2D.whiteTexture);
+                }
+
                 curPos.x += width + 5f;
                 Settings.enabled[def.defName] = enabled;
             }
 
             lastHeight += height;
-
             Widgets.EndScrollView();
         }
 
         public override void WriteSettings()
         {
             base.WriteSettings();
+            if (Settings.randomize || Settings.cycle) Settings.current = null;
             BackgroundController.PauseTransition = false;
             BackgroundController.Notify_SettingsChanged(Settings);
         }
-    }
-
-    public class VBESettings : ModSettings
-    {
-        public string current;
-        public bool cycle = true;
-        public FloatRange cycleTime = new(5f, 10f);
-        public Dictionary<string, bool> enabled;
-        public bool randomize = true;
-
-        public IEnumerable<BackgroundImageDef> Enabled =>
-            enabled.Where(kv => kv.Value).Select(kv => DefDatabase<BackgroundImageDef>.GetNamedSilentFail(kv.Key)).Where(def => def is not null);
-
-        public override void ExposeData()
-        {
-            base.ExposeData();
-            Scribe_Values.Look(ref cycle, "cycle", true);
-            Scribe_Values.Look(ref randomize, "randomize", true);
-            Scribe_Values.Look(ref cycleTime, "cycleTime", new FloatRange(5f, 10f));
-            Scribe_Values.Look(ref current, "current");
-            Scribe_Collections.Look(ref enabled, "enabled", LookMode.Value, LookMode.Value);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit) CheckInit();
-        }
-
-        public void CheckInit()
-        {
-            enabled ??= DefDatabase<BackgroundImageDef>.AllDefs.ToDictionary(def => def.defName, _ => true);
-
-            foreach (var def in DefDatabase<BackgroundImageDef>.AllDefs)
-                if (!enabled.ContainsKey(def.defName))
-                    enabled.Add(def.defName, true);
-        }
-    }
-
-    public class BackgroundImageDef : Def
-    {
-        private Texture2D icon;
-        public string iconPath;
-        public bool isCore;
-        public bool isTheme;
-        public bool isVanilla;
-        public string path;
-        private Texture2D texture;
-
-        public BackgroundImageDef()
-        {
-        }
-
-        public BackgroundImageDef(Texture2D tex, Texture2D icn = null)
-        {
-            texture = tex;
-            icon = icn;
-        }
-
-        public Texture2D Texture => texture ??= ContentFinder<Texture2D>.Get(path);
-        public Texture2D Icon => icon ??= ContentFinder<Texture2D>.Get(iconPath);
     }
 }

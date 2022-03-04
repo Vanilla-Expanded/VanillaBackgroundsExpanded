@@ -7,4 +7,9 @@
     <VBE.Cycle.Desc>Cycle background occasionally while in game</VBE.Cycle.Desc>
     <VBE.CycleTime>Cycle time:</VBE.CycleTime>
     <VBE.ToggleBackgrounds>Toggle Backgrounds Being Shown -></VBE.ToggleBackgrounds>
+    <VBE.SelectBackground>Select Background -></VBE.SelectBackground>
+    <VBE.AllowAnimated>Allow Animations</VBE.AllowAnimated>
+    <VBE.AllowAnimated.Desc>Allow animated backgrounds to be used.</VBE.AllowAnimated.Desc>
+    <VBE.Animated>animated</VBE.Animated>
+    <VBE.NoDesc>A cool background</VBE.NoDesc>
 </LanguageData>
