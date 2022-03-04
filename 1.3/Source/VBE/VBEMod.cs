@@ -47,7 +47,7 @@ namespace VBE
             BackgroundController.Initialize();
         }
 
-        public override string SettingsCategory() => "Vanilla Backgrounds Expanded";
+        public override string SettingsCategory() => "VBE".Translate();
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
@@ -60,15 +60,15 @@ namespace VBE
             inRect = inRect.ContractedBy(7f);
             var listing = new Listing_Standard();
             listing.Begin(leftRect);
-            listing.CheckboxLabeled("Randomize", ref Settings.randomize, "Randomize background on game start");
-            listing.CheckboxLabeled("Cycle", ref Settings.cycle, "Cycle background occasionally while in game");
+            listing.CheckboxLabeled("VBE.Randomize".Translate(), ref Settings.randomize, "VBE.Randomize.Desc".Translate());
+            listing.CheckboxLabeled("VBE.Cycle".Translate(), ref Settings.cycle, "VBE.Cycle.Desc".Translate());
             if (Settings.cycle)
             {
-                listing.Label("Cycle time:");
+                listing.Label("VBE.CycleTime".Translate());
                 Widgets.FloatRange(listing.GetRect(28f), (int) listing.CurHeight, ref Settings.cycleTime, 0.1f, 60f);
             }
 
-            listing.Label("Toggle Backgrounds Being Shown ->");
+            listing.Label("VBE.ToggleBackgrounds".Translate());
 
             listing.End();
 

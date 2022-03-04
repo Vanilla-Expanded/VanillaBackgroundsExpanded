@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <VBE>Vanilla Backgrounds Expanded</VBE>
+    <VBE.Randomize>Randomize</VBE.Randomize>
+    <VBE.Randomize.Desc>Randomize background on game start</VBE.Randomize.Desc>
+    <VBE.Cycle>Cycle</VBE.Cycle>
+    <VBE.Cycle.Desc>Cycle background occasionally while in game</VBE.Cycle.Desc>
+    <VBE.CycleTime>Cycle time:</VBE.CycleTime>
+    <VBE.ToggleBackgrounds>Toggle Backgrounds Being Shown -></VBE.ToggleBackgrounds>
+</LanguageData>
