@@ -6,10 +6,10 @@ namespace VBE
 {
     public class VBESettings : ModSettings
     {
-        public bool allowAnimated = true;
+        public bool allowAnimated;
         public string current;
         public bool cycle = true;
-        public FloatRange cycleTime = new(5f, 10f);
+        public FloatRange cycleTime = new(10f, 15f);
         public Dictionary<string, bool> enabled;
         public bool randomize = true;
 
@@ -26,8 +26,8 @@ namespace VBE
             base.ExposeData();
             Scribe_Values.Look(ref cycle, "cycle", true);
             Scribe_Values.Look(ref randomize, "randomize", true);
-            Scribe_Values.Look(ref allowAnimated, "allowAnimated", true);
-            Scribe_Values.Look(ref cycleTime, "cycleTime", new FloatRange(5f, 10f));
+            Scribe_Values.Look(ref allowAnimated, "allowAnimated");
+            Scribe_Values.Look(ref cycleTime, "cycleTime", new FloatRange(10f, 15f));
             Scribe_Values.Look(ref current, "current");
             Scribe_Collections.Look(ref enabled, "enabled", LookMode.Value, LookMode.Value);
             if (Scribe.mode == LoadSaveMode.PostLoadInit) CheckInit();
