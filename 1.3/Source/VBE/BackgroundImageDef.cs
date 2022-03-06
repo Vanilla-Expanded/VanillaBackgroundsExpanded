@@ -11,9 +11,6 @@ namespace VBE
 
         private static readonly HashSet<string> AcceptableExtensionsVideo = new()
         {
-            ".mov",
-            ".wav",
-            ".gif",
             ".webm"
         };
 
