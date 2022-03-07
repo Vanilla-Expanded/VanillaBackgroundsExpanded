@@ -7,15 +7,6 @@
         <path>SplashScreen</path>
         <iconPath>UI/Ship_Icon_Maintain</iconPath>
     </VBE.BackgroundImageDef>
-
-    <VBE.BackgroundImageDef>
-        <label>Animated</label>
-        <description>An animated background</description>
-        <defName>VBE_Animated</defName>
-        <path>UI/AnimatedTitle</path>
-        <animated>true</animated>
-        <iconPath>UI/VanillaExpandedLogo</iconPath>
-    </VBE.BackgroundImageDef>
 	
     <VBE.BackgroundImageDef>
         <label>Adventure</label>
