@@ -16,6 +16,10 @@ namespace VBE
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(OptionsTranspile)));
             harm.Patch(AccessTools.Method(typeof(UI_BackgroundMain), nameof(UI_BackgroundMain.DoOverlay)),
                 postfix: new HarmonyMethod(typeof(BackgroundController), nameof(BackgroundController.DoOverlay)));
+            harm.Patch(AccessTools.Method(typeof(MainMenuDrawer), nameof(MainMenuDrawer.Init)), postfix:
+                new HarmonyMethod(typeof(BackgroundController), nameof(BackgroundController.Initialize)));
+            harm.Patch(AccessTools.Method(typeof(Current), nameof(Current.Notify_LoadedSceneChanged)),
+                postfix: new HarmonyMethod(typeof(BackgroundController), nameof(BackgroundController.Notify_SceneChanged)));
         }
 
         public static IEnumerable<CodeInstruction> OptionsTranspile(IEnumerable<CodeInstruction> instructions)
@@ -36,7 +40,8 @@ namespace VBE
 
         public static void DoMenuBackgroundButton(Listing_Standard listing)
         {
-            if (DefDatabase<BackgroundImageDef>.AllDefsListForReading.Any() && listing.ButtonTextLabeled("SetBackgroundImage".Translate(), BackgroundController.Current.LabelCap))
+            if (DefDatabase<BackgroundImageDef>.AllDefsListForReading.Any() && listing.ButtonTextLabeled("SetBackgroundImage".Translate(),
+                DefDatabase<BackgroundImageDef>.GetNamedSilentFail(BackgroundController.Current.defName)?.LabelCap))
                 Find.WindowStack.Add(new FloatMenu((from image in VBEMod.AllDefsInOrder
                     select
                         new FloatMenuOption(image.label, delegate

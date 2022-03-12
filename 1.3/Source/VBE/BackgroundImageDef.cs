@@ -20,9 +20,11 @@ namespace VBE
         private bool initialized;
         public bool isCore;
         public bool isTheme;
+        public bool isUser;
         public bool isVanilla;
         public string path;
         public int previewFrame;
+        public string resolvedPath;
         private Texture2D texture;
         private string video;
 
@@ -47,7 +49,9 @@ namespace VBE
         public string Video => video ??= FindPath();
 
         public Texture2D Texture => texture ??= ContentFinder<Texture2D>.Get(path ?? "", !animated);
-        public Texture2D Icon => icon ??= ContentFinder<Texture2D>.Get(iconPath ?? "", iconPath is null);
+        public Texture2D Icon => iconPath.NullOrEmpty() ? BaseContent.ClearTex : icon ??= ContentFinder<Texture2D>.Get(iconPath, iconPath is null);
+
+        public static bool IsAcceptableVideoExtension(string extension) => AcceptableExtensionsVideo.Contains(extension);
 
         public void InitializeAnimated(Texture2D tex)
         {
@@ -59,7 +63,7 @@ namespace VBE
         private string FindPath()
         {
             foreach (var content in LoadedModManager.RunningModsListForReading)
-            foreach (var (text, file) in ModContentPack.GetAllFilesForMod(content, VideoPath, ext => AcceptableExtensionsVideo.Contains(ext)))
+            foreach (var (text, file) in ModContentPack.GetAllFilesForMod(content, VideoPath, IsAcceptableVideoExtension))
             {
                 var foundPath = text;
                 foundPath = foundPath.Replace('\\', '/');

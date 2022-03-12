@@ -38,8 +38,10 @@
   <ItemGroup>
     <Compile Include="BackgroundController.cs" />
     <Compile Include="BackgroundImageDef.cs" />
+    <Compile Include="DefGenerator_Backgrounds.cs" />
     <Compile Include="HarmonyPatches.cs" />
     <Compile Include="ModCompat.cs" />
+    <Compile Include="SettingsManager.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="VBEMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

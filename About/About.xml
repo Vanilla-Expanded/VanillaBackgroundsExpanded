@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <name>Vanilla Backgrounds Expanded</name>
-  <author>legodudee17, Oskar Potocki</author>
+  <author>legodude17, Oskar Potocki</author>
   <supportedVersions>
     <li>1.3</li>
   </supportedVersions>
@@ -23,9 +23,9 @@ The background images within this mod are protected under CC BY-NC-ND 4.0. They 
     </li>
   </modDependencies>
   <loadAfter>
-    <li>Ludeon.RimWorld</li>
-    <li>Ludeon.RimWorld.Royalty</li>
-	<li>Ludeon.RimWorld.Ideology</li>
-    <li>brrainz.harmony</li>
+    <li>me.samboycoding.betterloading</li>
   </loadAfter>
+  <loadBefore>
+    <li>ludeon.rimworld</li>
+  </loadBefore>
 </ModMetaData>

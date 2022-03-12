@@ -1,18 +1,21 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Text;
 using RimWorld;
 using UnityEngine;
 using UnityEngine.Video;
 using Verse;
+using Object = UnityEngine.Object;
 
 namespace VBE
 {
     public static class BackgroundController
     {
-        private static BackgroundImageDef current;
-        public static BackgroundImageDef Default;
+        private static BackgroundImage current;
+        public static BackgroundImage Default;
         private static float transitionTime = float.MaxValue;
         private static float transitionPct = -1f;
-        private static BackgroundImageDef transitionTo;
+        private static BackgroundImage transitionTo;
         private static bool initialized;
         public static bool PauseTransition;
         private static VideoPlayer videoPlayer;
@@ -20,18 +23,18 @@ namespace VBE
 
         private static int index;
 
-        public static BackgroundImageDef Current
+        public static BackgroundImage Current
         {
             get => current ?? Default;
             set
             {
-                if (current == value) return;
+                // Log.Message($"[VBE] Changing background from {current?.ToString() ?? "nothing"} to {value?.ToString() ?? "nothing"}");
                 if (value is null) return;
                 if (value.animated)
                 {
-                    if (!VBEMod.Settings.allowAnimated)
+                    if (!VBEMod.AllowAnimated)
                     {
-                        Log.Error("[VBE] Tried to load animated background while that setting is disabled");
+                        Log.Error("[VBE] Tried to load animated background while disallowed");
                         return;
                     }
 
@@ -44,49 +47,110 @@ namespace VBE
 
                 if (current is not null && current.animated && !value.animated)
                 {
-                    videoPlayer.Stop();
-                    videoPlayer.enabled = false;
-                }
-
-                var idx = VBEMod.Settings.Enabled.ToList().IndexOf(value);
-                if (idx >= 0) index = idx;
-
-                current = value;
-                if (Current.animated)
-                {
-                    videoPlayer ??= Utils.MakeVideoPlayer();
-                    if (videoPlayer.url == Current.Video && videoPlayer.isPrepared)
-                        videoPlayer.Play();
+                    if (VBEMod.AllowAnimated)
+                    {
+                        videoPlayer.Stop();
+                        videoPlayer.enabled = false;
+                    }
                     else
                     {
-                        videoPlayer.enabled = true;
-                        videoPlayer.sendFrameReadyEvents = false;
-                        videoPlayer.frame = 0;
-                        videoPlayer.url = Current.Video;
-                        videoPlayer.time = 0f;
-                        videoPlayer.Prepare();
+                        Object.Destroy(videoPlayer);
+                        videoPlayer = null;
                     }
                 }
-                else BackgroundMain.overrideBGImage = Current.Texture;
+
+                var idx = SettingsManager.Index(value);
+                if (idx >= 0) index = idx;
+
+
+                current = value;
+                if (current.animated)
+                    try
+                    {
+                        videoPlayer ??= Utils.MakeVideoPlayer();
+                        if (videoPlayer.url == current.Video && videoPlayer.isPrepared)
+                            videoPlayer.Play();
+                        else
+                        {
+                            videoPlayer.enabled = true;
+                            videoPlayer.sendFrameReadyEvents = false;
+                            videoPlayer.frame = 0;
+                            videoPlayer.url = Current.Video;
+                            videoPlayer.time = 0f;
+                            videoPlayer.Prepare();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"[VBE] Error while initializing video player for {current} with path {current.Video}: {e}");
+                    }
+                else
+                    BackgroundMain.overrideBGImage = current.Texture;
             }
         }
 
-
         private static UI_BackgroundMain BackgroundMain => (UI_BackgroundMain) UIMenuBackgroundManager.background;
 
+        public static string StateString()
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine($"  Current: {current} (def: {current.Def})");
+            builder.AppendLine($"  Default: {Default} (def: {Default.Def})");
+            builder.AppendLine($"  videoPlayer: {videoPlayer}");
+            builder.AppendLine($"  overrideBGImage: {BackgroundMain.overrideBGImage}");
+            builder.AppendLine("  Transition Data:");
+            builder.AppendLine($"    transitionTo: {transitionTo} (def: {transitionTo.Def})");
+            builder.AppendLine($"    transitionPct: {transitionPct}");
+            builder.AppendLine($"    transitionTime: {transitionTime}");
+            builder.AppendLine($"    videoPlayerTransition: {videoPlayerTransition}");
+            return builder.ToString();
+        }
+
+        public static void Notify_SceneChanged()
+        {
+            if (!initialized) return;
+            if (videoPlayer is not null)
+            {
+                Object.Destroy(videoPlayer);
+                videoPlayer = null;
+            }
+
+            CancelTransition();
+
+            if (Current.animated)
+                Current = SettingsManager.Allowed(current) ? current : GetNext();
+            else Current = GetNext();
+        }
+
+        private static void CancelTransition()
+        {
+            transitionPct = -1f;
+            if (transitionTo is not null && SettingsManager.Allowed(transitionTo)) Current = transitionTo;
+            transitionTo = null;
+            transitionTime = float.MaxValue;
+            if (videoPlayerTransition is not null)
+            {
+                Object.Destroy(videoPlayerTransition);
+                videoPlayerTransition = null;
+            }
+        }
 
         public static void DoOverlay()
         {
+            if (!SettingsManager.Initialized) SettingsManager.Initialize();
             if (!initialized) return;
-            if (Current.animated)
-            {
+            if (Current is null) return;
+            if (Current.animated && videoPlayer is not null)
                 if (videoPlayer.isPlaying) Utils.DrawBG(videoPlayer.texture);
                 else if (videoPlayer.isPrepared) videoPlayer.Play();
-            }
 
             if (!VBEMod.Settings.cycle) return;
             if (BackgroundMain.expansionImageFades is not null && ModLister.AllExpansions.Any(key => BackgroundMain.expansionImageFades[key] > 0f)) return;
+            DrawTransition();
+        }
 
+        private static void DrawTransition()
+        {
             if (Time.time >= transitionTime)
             {
                 transitionTo = GetNext();
@@ -109,7 +173,7 @@ namespace VBE
             if (transitionPct >= 0f && transitionTo is not null)
             {
                 transitionPct += Time.deltaTime;
-                if (transitionTo != Current)
+                if (transitionTo != Current && (!transitionTo.animated || videoPlayerTransition is {isPrepared: true}))
                 {
                     GUI.color = new Color(1f, 1f, 1f, transitionPct);
                     Utils.DrawBG(transitionTo.animated ? videoPlayerTransition.texture : transitionTo.Texture);
@@ -136,13 +200,12 @@ namespace VBE
 
         public static void Notify_SettingsChanged(VBESettings settings)
         {
+            if (!initialized) return;
             if (settings.cycle)
             {
-                if (settings.Allowed(Current))
+                if (SettingsManager.Allowed(Current))
                 {
-                    transitionPct = -1f;
-                    if (transitionTo is not null && settings.Allowed(transitionTo)) Current = transitionTo;
-                    transitionTo = null;
+                    CancelTransition();
                     transitionTime = Time.time + settings.cycleTime.RandomInRange;
                 }
                 else
@@ -153,34 +216,62 @@ namespace VBE
                 }
             }
             else
-            {
-                transitionPct = -1f;
-                if (transitionTo is not null && settings.Allowed(transitionTo)) Current = transitionTo;
-                transitionTo = null;
-                transitionTime = float.MaxValue;
-                if (!settings.Allowed(transitionTo)) Current = GetNext();
-            }
+                CancelTransition();
+
+            if (!SettingsManager.Allowed(Current)) Current = GetNext();
         }
 
-        private static BackgroundImageDef GetNext()
+        private static BackgroundImage GetNext()
         {
-            var settings = VBEMod.Settings;
-            if (!settings.current.NullOrEmpty()) return DefDatabase<BackgroundImageDef>.GetNamedSilentFail(settings.current);
-            if (settings.randomize)
-                return settings.Enabled.TryRandomElement(out var random) ? random : Default;
-            var list = settings.Enabled.ToList();
-            return list[Utils.Wrap(index + 1, 0, list.Count - 1)];
+            if (SettingsManager.UseSingle)
+            {
+                var image = SettingsManager.Single;
+                return SettingsManager.Allowed(image) ? image : Default;
+            }
+
+            if (VBEMod.Settings.randomize)
+                return SettingsManager.Images.TryRandomElement(out var random) ? random : Default;
+            var list = SettingsManager.Images.ToList();
+            return list.Count == 0 ? Default : list[Utils.Wrap(index + 1, 0, list.Count - 1)];
         }
 
         public static void Initialize()
         {
             var settings = VBEMod.Settings;
-            settings.CheckInit();
+            if (!SettingsManager.Loading) settings.CheckInit();
             Current = GetNext();
 
             if (settings.cycle) transitionTime = Time.time + settings.cycleTime.RandomInRange;
-
             initialized = true;
         }
+
+        public static void DrawBackground()
+        {
+            if (!SettingsManager.Initialized) SettingsManager.Initialize();
+            if (!initialized) return;
+            if (Current is null) return;
+            Utils.DrawBG(Current.animated ? videoPlayer.texture : Current.Texture);
+            if (!VBEMod.Settings.cycle) return;
+            DrawTransition();
+        }
+    }
+
+    public class BackgroundImage
+    {
+        public bool animated;
+        public string defName;
+        public Texture2D Texture;
+        public string Video;
+
+        public BackgroundImageDef Def => DefDatabase<BackgroundImageDef>.GetNamedSilentFail(defName);
+        public override string ToString() => (defName.NullOrEmpty() ? "" : defName + " ") + (animated ? Video : Texture?.name ?? "null texture");
+
+        public static implicit operator BackgroundImage(BackgroundImageDef def) => new()
+        {
+            defName = def.defName,
+            animated = def.animated,
+            Texture = def.animated ? null : def.Texture,
+            Video = def.animated ? def.Video : null
+        };
     }
 }

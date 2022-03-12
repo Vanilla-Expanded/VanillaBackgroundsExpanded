@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
@@ -15,6 +16,8 @@ namespace VBE
         public static Harmony Harm;
         public static VBESettings Settings;
         public static VBEMod Instance;
+
+        public static string CustomBackgroundFolderPath;
         private bool allowAnimatedOnLoad;
 
         private Queue<BackgroundImageDef> animatedQueue;
@@ -29,46 +32,40 @@ namespace VBE
             Harm = new Harmony("vanillaexpanded.backgrounds");
             Settings = GetSettings<VBESettings>();
             allowAnimatedOnLoad = Settings.allowAnimated;
-            LongEventHandler.ExecuteWhenFinished(Initialize);
             HarmonyPatches.DoPatches(Harm);
+            ModCompat.ApplyCompat(Harm);
         }
 
         public static IEnumerable<BackgroundImageDef> AllDefsInOrder => from def in DefDatabase<BackgroundImageDef>.AllDefs
-            where Settings.allowAnimated || !def.animated
-            orderby def.isCore descending, def.isVanilla descending, def.isTheme, def.label
+            where AllowAnimated || !def.animated
+            orderby def.isCore descending, def.isVanilla descending, def.isUser descending, def.isTheme, def.modContentPack?.Name, def.label
             select def;
+
+        public static bool AllowAnimated => Settings.allowAnimated && (GenScene.InEntryScene || GenScene.InPlayScene);
 
         public void Initialize()
         {
-            foreach (var def in ModLister.AllExpansions)
-            {
-                var bgDef = new BackgroundImageDef
-                {
-                    label = def.label,
-                    description = def.description,
-                    defName = def.defName,
-                    path = def.backgroundPath,
-                    iconPath = def.iconPath,
-                    isCore = def.isCore,
-                    isVanilla = true
-                };
+            CustomBackgroundFolderPath = Path.Combine(GenFilePaths.ConfigFolderPath, "VanillaBackgroundsExpanded", "Backgrounds");
+            var customFolder = new DirectoryInfo(CustomBackgroundFolderPath);
+            if (!customFolder.Exists) customFolder.Create();
 
-                DefGenerator.AddImpliedDef(bgDef);
-                if (def.isCore) BackgroundController.Default = bgDef;
-            }
+            foreach (var def in DefGenerator_Backgrounds.BackgroundDefsFromExpansions().Concat(DefGenerator_Backgrounds.BackgroundDefsFromFolder(customFolder)))
+                DefGenerator.AddImpliedDef(def);
 
             if (ModLister.HasActiveModWithName("RimThemes")) ModCompat.LoadRimThemesImages();
 
             Settings.CheckInit();
 
-            BackgroundController.Initialize();
-
             InitializeAnimated();
+
+            SettingsManager.Loading = false;
+            SettingsManager.Clear();
+            if (!SettingsManager.DoLoadingBackground) BackgroundController.Initialize();
         }
 
         public void InitializeAnimated()
         {
-            if (!Settings.allowAnimated) return;
+            if (!AllowAnimated) return;
             if (initing)
             {
                 foreach (var def in DefDatabase<BackgroundImageDef>.AllDefs.Except(animatedQueue).Where(def => def.NeedsInit))
@@ -107,12 +104,11 @@ namespace VBE
                         try
                         {
                             if (!req.done) req.WaitForCompletion();
-                            var tex = new Texture2D(req.width, req.height, TextureFormat.ARGB32, false);
+                            var tex = new Texture2D(req.width, req.height, TextureFormat.RGBA32, false);
                             var data = req.GetData<uint>();
                             tex.LoadRawTextureData(data);
                             tex.Apply();
                             def.InitializeAnimated(tex);
-                            videoPlayer.enabled = false;
                             Object.Destroy(videoPlayer);
                             InitNext();
                         }
@@ -136,30 +132,58 @@ namespace VBE
         {
             base.DoSettingsWindowContents(inRect);
             BackgroundController.PauseTransition = true;
-            var leftRect = inRect.LeftPartPixels(120f);
+            var leftRect = inRect.LeftPartPixels(200f);
             Widgets.DrawLineVertical(leftRect.xMax + 15f, leftRect.yMin, leftRect.height);
-            inRect.xMin += 150f;
+            inRect.xMin += 210f;
             Widgets.DrawMenuSection(inRect);
             inRect = inRect.ContractedBy(7f);
             var listing = new Listing_Standard();
             listing.Begin(leftRect);
+            if (listing.ButtonText("VBE.OpenBackgrounds".Translate())) Application.OpenURL(CustomBackgroundFolderPath);
+            listing.GapLine();
             listing.CheckboxLabeled("VBE.Randomize".Translate(), ref Settings.randomize, "VBE.Randomize.Desc".Translate());
             listing.CheckboxLabeled("VBE.Cycle".Translate(), ref Settings.cycle, "VBE.Cycle.Desc".Translate());
-            listing.CheckboxLabeled("VBE.AllowAnimated".Translate(), ref Settings.allowAnimated, "VBE.AllowAnimated.Desc".Translate());
-            if (Settings.allowAnimated && !allowAnimatedOnLoad)
-            {
-                InitializeAnimated();
-                allowAnimatedOnLoad = true;
-            }
-
             if (Settings.cycle)
             {
                 listing.Label("VBE.CycleTime".Translate());
                 Widgets.FloatRange(listing.GetRect(28f), (int) listing.CurHeight, ref Settings.cycleTime, 0.1f, 60f);
             }
 
+            listing.GapLine();
+
+            listing.CheckboxLabeled("VBE.AllowAnimated".Translate(), ref Settings.allowAnimated, "VBE.AllowAnimated.Desc".Translate());
+            if (AllowAnimated && !allowAnimatedOnLoad)
+            {
+                InitializeAnimated();
+                allowAnimatedOnLoad = true;
+            }
+
+            listing.CheckboxLabeled("VBE.OnLoad".Translate(), ref Settings.loadingBackground, "VBE.OnLoad.Desc".Translate());
+            listing.CheckboxLabeled("VBE.AnimatedLoad".Translate(), ref Settings.animatedOnLoad, "VBE.AnimatedLoad.Desc".Translate());
+
+            if (ModCompat.RimThemes) listing.CheckboxLabeled("VBE.RimThemes".Translate(), ref Settings.rimThemesOverride, "VBE.RimThemes.Desc".Translate());
+            // if (ModCompat.BetterLoading)
+            // {
+            //     listing.CheckboxLabeled("VBE.BetterLoading".Translate(), ref Settings.betterLoadingOverride, "VBE.BetterLoading.Desc".Translate());
+            //     listing.CheckboxLabeled("VBE.BetterLoading.Move".Translate(), ref Settings.betterLoadingAlternative, "VBE.BetterLoading.Move.Desc".Translate());
+            // }
+
+            listing.GapLine();
             if (Settings.cycle || Settings.randomize)
+            {
                 listing.Label("VBE.ToggleBackgrounds".Translate());
+                var rect = listing.GetRect(30f);
+                if (Widgets.ButtonText(rect.LeftHalf(), "VBE.AllowAll".Translate()))
+                    foreach (var def in AllDefsInOrder)
+                        Settings.enabled[def.defName] = true;
+
+                if (Widgets.ButtonText(rect.RightHalf(), "VBE.DisallowAll".Translate()))
+                {
+                    foreach (var def in AllDefsInOrder) Settings.enabled[def.defName] = false;
+
+                    Settings.enabled[Settings.current.NullOrEmpty() ? BackgroundController.Default.defName : Settings.current] = true;
+                }
+            }
             else
                 listing.Label("VBE.SelectBackground".Translate());
 
@@ -208,7 +232,12 @@ namespace VBE
                 }
                 else
                 {
-                    if (Widgets.ButtonInvisible(rect)) Settings.current = def.defName;
+                    if (Widgets.ButtonInvisible(rect))
+                    {
+                        Settings.current = def.defName;
+                        enabled = true;
+                    }
+
                     if (Settings.current == def.defName) Widgets.DrawBox(rect, 3, Texture2D.whiteTexture);
                 }
 
@@ -226,6 +255,8 @@ namespace VBE
             if (Settings.randomize || Settings.cycle) Settings.current = null;
             BackgroundController.PauseTransition = false;
             BackgroundController.Notify_SettingsChanged(Settings);
+            if (Settings.loadingBackground) SettingsManager.SaveForLoad(Settings);
+            else File.Delete(SettingsManager.SettingsFilePath);
         }
     }
 }

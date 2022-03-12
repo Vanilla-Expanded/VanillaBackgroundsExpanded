@@ -8,7 +8,12 @@ namespace VBE
     {
         public static VideoPlayer MakeVideoPlayer()
         {
-            var videoPlayer = Current.Root_Entry.gameObject.AddComponent<VideoPlayer>();
+            VideoPlayer videoPlayer;
+            if (GenScene.InEntryScene)
+                videoPlayer = Current.Root_Entry.gameObject.AddComponent<VideoPlayer>();
+            else if (GenScene.InPlayScene)
+                videoPlayer = Current.Root_Play.gameObject.AddComponent<VideoPlayer>();
+            else return null;
             videoPlayer.enabled = true;
             videoPlayer.renderMode = VideoRenderMode.APIOnly;
             videoPlayer.isLooping = true;
@@ -28,16 +33,24 @@ namespace VBE
         {
             var vector = new Vector2(texture.width, texture.height);
             Rect rect;
-            if (UI.screenWidth > UI.screenHeight * (vector.x / vector.y))
+            var screenWidth = UI.screenWidth;
+            var screenHeight = UI.screenHeight;
+            if (SettingsManager.Loading && SettingsManager.DoLoadingBackground && VBEMod.Settings.betterLoadingOverride && ModCompat.BetterLoading)
             {
-                float width = UI.screenWidth;
-                var num2 = UI.screenWidth * (vector.y / vector.x);
-                rect = new Rect(0f, (UI.screenHeight - num2) * 0.5f, width, num2);
+                screenWidth = Screen.width;
+                screenHeight = Screen.height;
+            }
+
+            if (screenWidth > screenHeight * (vector.x / vector.y))
+            {
+                float width = screenWidth;
+                var num2 = screenWidth * (vector.y / vector.x);
+                rect = new Rect(0f, (screenHeight - num2) * 0.5f, width, num2);
             }
             else
             {
-                float height = UI.screenHeight;
-                var num = UI.screenHeight * (vector.x / vector.y);
+                float height = screenHeight;
+                var num = screenHeight * (vector.x / vector.y);
                 rect = new Rect((UI.screenWidth - num) * 0.5f, 0f, num, height);
             }
 
@@ -46,9 +59,16 @@ namespace VBE
 
         public static int Wrap(int value, int min, int max)
         {
+            if (min == max) return min;
             if (value < min) value = max - (min - value);
             if (value > max) value = min + (value - max);
             return value;
+        }
+
+        [DebugAction("General", "[VBE] Log Controller State", allowedGameStates = AllowedGameStates.Entry | AllowedGameStates.Playing)]
+        public static void LogState()
+        {
+            Log.Message($"[VBE] Current Controller State:\n{BackgroundController.StateString()}");
         }
     }
 }
