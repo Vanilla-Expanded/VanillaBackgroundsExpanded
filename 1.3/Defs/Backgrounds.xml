@@ -128,6 +128,14 @@
         <iconPath>UI/VanillaExpandedLogo</iconPath>
     </VBE.BackgroundImageDef>
 	
+    <VBE.BackgroundImageDef>
+        <label>Exploration</label>
+        <description>Splash screen created for an unannounced project by ISOREX and Kikohi.</description>
+        <defName>VBE_Exploration</defName>
+        <path>Exploration</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
     <VBE.BackgroundImageDef MayRequire="RimEffect.Core">
         <label>Citadel</label>
         <description>Splash screen created for Rim-Effect: Asari and the Reapers.</description>
