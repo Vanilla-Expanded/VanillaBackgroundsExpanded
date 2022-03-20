@@ -23,9 +23,10 @@ The background images within this mod are protected under CC BY-NC-ND 4.0. They 
     </li>
   </modDependencies>
   <loadAfter>
-    <li>me.samboycoding.betterloading</li>
+    <li>ludeon.rimworld</li>
   </loadAfter>
   <loadBefore>
-    <li>ludeon.rimworld</li>
+    <li>unlimitedhugs.hugslib</li>
+    <li>oskarpotocki.vanillafactionsexpanded.core</li>
   </loadBefore>
 </ModMetaData>
