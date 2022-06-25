@@ -130,9 +130,17 @@
 	
     <VBE.BackgroundImageDef>
         <label>Exploration</label>
-        <description>Splash screen created for an unannounced project by ISOREX and Kikohi.</description>
+        <description>Splash screen created for a RimSpace by ISOREX and Kikohi.</description>
         <defName>VBE_Exploration</defName>
         <path>Exploration</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Awakening</label>
+        <description>Splash screen created for Vanilla Factions Expanded - Archotech.</description>
+        <defName>VBE_Awakening</defName>
+        <path>Awakening</path>
         <iconPath>UI/VanillaExpandedLogo</iconPath>
     </VBE.BackgroundImageDef>
 	
