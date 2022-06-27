@@ -266,12 +266,14 @@ namespace VBE
         public BackgroundImageDef Def => DefDatabase<BackgroundImageDef>.GetNamedSilentFail(defName);
         public override string ToString() => (defName.NullOrEmpty() ? "" : defName + " ") + (animated ? Video : Texture?.name ?? "null texture");
 
-        public static implicit operator BackgroundImage(BackgroundImageDef def) => new()
-        {
-            defName = def.defName,
-            animated = def.animated,
-            Texture = def.animated ? null : def.Texture,
-            Video = def.animated ? def.Video : null
-        };
+        public static implicit operator BackgroundImage(BackgroundImageDef def) => def == null
+            ? null
+            : new BackgroundImage()
+            {
+                defName = def.defName,
+                animated = def.animated,
+                Texture = def.animated ? null : def.Texture,
+                Video = def.animated ? def.Video : null
+            };
     }
 }

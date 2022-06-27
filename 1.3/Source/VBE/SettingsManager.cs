@@ -20,7 +20,7 @@ namespace VBE
         public static IEnumerable<BackgroundImage> Images => Loading ? images : VBEMod.Settings.Enabled.Select(def => (BackgroundImage) def);
         public static bool UseSingle => Loading ? singleImage is not null : !VBEMod.Settings.current.NullOrEmpty();
         public static BackgroundImage Single => Loading ? singleImage : DefDatabase<BackgroundImageDef>.GetNamedSilentFail(VBEMod.Settings.current);
-        public static bool Allowed(BackgroundImage image) => Loading || VBEMod.Settings.Allowed(image.Def);
+        public static bool Allowed(BackgroundImage image) => image != null && (Loading || VBEMod.Settings.Allowed(image.Def));
 
         public static int Index(BackgroundImage image) => Loading
             ? images.IndexOf(image)
@@ -117,7 +117,8 @@ namespace VBE
                     var foundPath = text;
                     foundPath = foundPath.Replace('\\', '/');
                     if (foundPath.StartsWith(contentPath)) foundPath = foundPath.Substring(contentPath.Length);
-                    if (foundPath.EndsWith(Path.GetExtension(foundPath))) foundPath = foundPath.Substring(0, foundPath.Length - Path.GetExtension(foundPath).Length);
+                    if (foundPath.EndsWith(Path.GetExtension(foundPath)))
+                        foundPath = foundPath.Substring(0, foundPath.Length - Path.GetExtension(foundPath).Length);
                     if (foundPath == def.path) return def.resolvedPath = file.FullName;
                 }
             }

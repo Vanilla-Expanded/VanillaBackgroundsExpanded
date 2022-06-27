@@ -63,7 +63,8 @@ namespace VBE
         public static void LoadRimThemesImages()
         {
             var themes = AccessTools.TypeByName("aRandomKiwi.RimThemes.Themes");
-            var defaultIcon = (Texture2D) AccessTools.Field(AccessTools.TypeByName("aRandomKiwi.RimThemes.Loader"), "defaultIconTex")?.GetValue(null) ?? Texture2D.normalTexture;
+            var defaultIcon = (Texture2D) AccessTools.Field(AccessTools.TypeByName("aRandomKiwi.RimThemes.Loader"), "defaultIconTex")?.GetValue(null) ??
+                              Texture2D.normalTexture;
             var textDB = (Dictionary<string, Dictionary<string, string>>) AccessTools.Field(themes, "DBText")?.GetValue(null);
             var texDB = (Dictionary<string, Dictionary<string, Dictionary<string, Texture2D>>>) AccessTools.Field(themes, "DBTex")?.GetValue(null);
             var iconDB = (Dictionary<string, Texture2D>) AccessTools.Field(themes, "DBTexThemeIcon")?.GetValue(null);
@@ -75,7 +76,7 @@ namespace VBE
                         var tex = dict["UI_BackgroundMain"]["BGPlanet"];
                         var icn = iconDB is not null && iconDB.TryGetValue(key, out var icon) ? icon : defaultIcon;
                         var arr = key.Split('§');
-                        var defName = arr[1] + arr[0];
+                        var defName = arr[1] + arr[0].Replace(' ', '_');
                         if (DefDatabase<BackgroundImageDef>.GetNamedSilentFail(defName) is not null) continue;
                         DefGenerator.AddImpliedDef(new BackgroundImageDef(tex, icn)
                         {
@@ -91,7 +92,7 @@ namespace VBE
                 {
                     var icn = iconDB is not null && iconDB.TryGetValue(key, out var icon) ? icon : defaultIcon;
                     var arr = key.Split('§');
-                    var defName = arr[1] + arr[0] + "_Animated";
+                    var defName = arr[1] + arr[0].Replace(' ', '_') + "_Animated";
                     if (DefDatabase<BackgroundImageDef>.GetNamedSilentFail(defName) is not null) continue;
                     DefGenerator.AddImpliedDef(new BackgroundImageDef(path, icn)
                     {
@@ -119,7 +120,8 @@ namespace VBE
             var info2 = AccessTools.Method(typeof(GUI), nameof(GUI.DrawTexture), new[] {typeof(Rect), typeof(Texture)});
             idx1 = codes.FindIndex(ins => ins.Calls(info2));
             codes.RemoveRange(idx1 - 5, 6);
-            var info3 = AccessTools.Method(typeof(Widgets), nameof(Widgets.FillableBar), new[] {typeof(Rect), typeof(float), typeof(Texture2D), typeof(Texture2D), typeof(bool)});
+            var info3 = AccessTools.Method(typeof(Widgets), nameof(Widgets.FillableBar),
+                new[] {typeof(Rect), typeof(float), typeof(Texture2D), typeof(Texture2D), typeof(bool)});
             idx1 = codes.FindIndex(ins => ins.Calls(info3));
             codes.RemoveRange(idx1 - 14, 16);
             idx1 = codes.FindIndex(ins => ins.Calls(info1));
