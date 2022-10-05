@@ -235,6 +235,26 @@ public static class BackgroundController
         return list.Count == 0 ? Default : list[Utils.Wrap(index + 1, 0, list.Count - 1)];
     }
 
+    public static void Clear()
+    {
+        transitionPct = -1f;
+        transitionTo = null;
+        transitionTime = float.MaxValue;
+        if (videoPlayerTransition is not null)
+        {
+            Object.Destroy(videoPlayerTransition);
+            videoPlayerTransition = null;
+        }
+
+        if (videoPlayer is not null)
+        {
+            Object.Destroy(videoPlayer);
+            videoPlayer = null;
+        }
+
+        Current = Default;
+    }
+
     public static void Initialize()
     {
         var settings = VBEMod.Settings;

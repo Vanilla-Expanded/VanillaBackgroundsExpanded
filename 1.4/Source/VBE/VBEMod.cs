@@ -58,9 +58,15 @@ public class VBEMod : Mod
 
         InitializeAnimated();
 
-        SettingsManager.Loading = false;
         SettingsManager.Clear();
-        if (!SettingsManager.DoLoadingBackground) BackgroundController.Initialize();
+        SettingsManager.Loading = false;
+        if (SettingsManager.DoLoadingBackground)
+        {
+            BackgroundController.Clear();
+            BackgroundController.Notify_SettingsChanged(Settings);
+        }
+        else
+            BackgroundController.Initialize();
     }
 
     public void InitializeAnimated()
