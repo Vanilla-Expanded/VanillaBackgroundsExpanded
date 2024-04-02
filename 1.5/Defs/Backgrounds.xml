@@ -144,6 +144,102 @@
         <iconPath>UI/VanillaExpandedLogo</iconPath>
     </VBE.BackgroundImageDef>
 	
+    <VBE.BackgroundImageDef>
+        <label>Sacrifice</label>
+        <description>Splash screen created for Vanilla Races Expanded - Pigskin.</description>
+        <defName>VBE_Sacrifice</defName>
+        <path>Sacrifice</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Eclipse</label>
+        <description>Splash screen created for Vanilla Factions Expanded - Tribal.</description>
+        <defName>VBE_Eclipse</defName>
+        <path>Eclipse</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Denial</label>
+        <description>Splash screen created for Vanilla Races Expanded - Waster.</description>
+        <defName>VBE_Denial</defName>
+        <path>Denial</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Passion</label>
+        <description>Splash screen created for Vanilla Races Expanded - Highmate.</description>
+        <defName>VBE_Passion</defName>
+        <path>Passion</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Arrogance</label>
+        <description>Splash screen created for Vanilla Factions Expanded - Deserters.</description>
+        <defName>VBE_Arrogance</defName>
+        <path>Arrogance</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Growth</label>
+        <description>Splash screen created for Vanilla Races Expanded - Phytokin.</description>
+        <defName>VBE_Growth</defName>
+        <path>Growth</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Isolation</label>
+        <description>Splash screen created for Vanilla Races Expanded - Saurid.</description>
+        <defName>VBE_Isolation</defName>
+        <path>Isolation</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Obligation</label>
+        <description>Splash screen created for Vanilla Races Expanded - Hussar.</description>
+        <defName>VBE_Obligation</defName>
+        <path>Obligation</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Habit</label>
+        <description>Splash screen created for Vanilla Races Expanded - Lycanthrope.</description>
+        <defName>VBE_Habit</defName>
+        <path>Habit</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Dread</label>
+        <description>Splash screen created for Vanilla Races Expanded - Sanguophage.</description>
+        <defName>VBE_Dread</defName>
+        <path>Dread</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Pride</label>
+        <description>Splash screen created for Helixien's mod, but honestly I don't remember which one.</description>
+        <defName>VBE_Pride</defName>
+        <path>Pride</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
+    <VBE.BackgroundImageDef>
+        <label>Shattering</label>
+        <description>Splash screen created for Vanilla Factions Expanded - Empire</description>
+        <defName>VBE_Shattering</defName>
+        <path>Shattering</path>
+        <iconPath>UI/VanillaExpandedLogo</iconPath>
+    </VBE.BackgroundImageDef>
+	
     <VBE.BackgroundImageDef MayRequire="RimEffect.Core">
         <label>Citadel</label>
         <description>Splash screen created for Rim-Effect: Asari and the Reapers.</description>
