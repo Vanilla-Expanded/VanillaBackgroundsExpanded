@@ -8,6 +8,7 @@
     <li>1.5</li>
   </supportedVersions>
   <url>https://github.com/legodude17/VanillaBackgroundsExpanded</url>
+  	<modIconPath IgnoreIfNoMatchingField="True">UI/VELogo</modIconPath>
   <packageId>vanillaexpanded.backgrounds</packageId>
   <description>
 Vanilla Backgrounds Expanded is a mod that adds many new main menu and loading screen backgrounds inspired by RimWorld - all created by Oskar Potocki for the purpose of Vanilla Expanded mod series. With mod options, you will be fully able to customize what backgrounds appear in the game, whether they cycle or not, and how long should it take for them to change into other backgrounds.
